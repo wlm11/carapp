@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>租赁登记</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /*#tbody{*/
+            /*cursor: pointer;*/
+        /*}*/
+
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-default">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">汽车管理系统</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li><a href="/client">客人查询</a></li>
+                <li class="active"><a href="/rent">租赁登记</a></li>
+                <li><a href="/return">归还登记</a></li>
+                <li><a href="/statistics">统计分析</a></li>
+                <li><a href="/showClass">类别档案</a></li>
+                <li><a href="/car">汽车档案</a></li>
+                <li><a href="/echarts">echarts</a></li>
+            </ul>
+
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="/quit">退出系统</a></li>
+            </ul>
+        </div><!-- /.navbar-collapse -->
+    </div><!-- /.container-fluid -->
+</nav>
+<div class="container">
+    <div class="row">
+        <div class="col-md-2">
+            <table class="table table-bordered">
+                <thead>
+                <tr>
+                    <th style="text-align:center">类别名称</th>
+                </tr>
+                </thead>
+                <tbody id="tbody">
+                <%
+                for(var i=0;i<result.length;i++){
+                %>
+                <tr>
+                    <th style="text-align:center"><%=result[i].class%></th>
+
+                </tr>
+
+                <%
+                }
+                %>
+                </tbody>
+            </table>
+        </div>
+        <div class="col-md-6">
+            <table class="table table-bordered">
+                <thead>
+                <tr>
+                    <th></th>
+                    <th>id</th>
+                    <th>汽车名称</th>
+                    <th>租赁价格</th>
+                    <th>出租状态</th>
+                </tr>
+                </thead>
+                <tbody id="classcar">
+                <%
+                for(var i=0;i<data.length;i++){
+                %>
+                <tr>
+                    <th><input type="radio" name="check" class="gou" data-id="<%=data[i]._id%>"></th>
+                    <th><%=i+1%></th>
+                    <th><%=data[i].carname%></th>
+                    <th><%=data[i].money%></th>
+                    <th><%if(data[i].state==false){%>
+                        未租出
+                        <%}else{%>
+                        已租出
+                        <%}%>
+                    </th>
+
+                </tr>
+
+                <%
+                }
+                %>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="col-md-4" id="rentAll">
+            <div class="form-group">
+                <label>租赁时长</label>
+                <input type="text" class="form-control" name="usertime">天
+            </div>
+            <div class="form-group">
+                <label>每天租金</label>
+                <input type="text" class="form-control" name="daymoney" disabled>
+            </div>
+            <div class="form-group">
+                <label>合计金额</label>
+                <input type="text" class="form-control" name="allmoney" disabled>
+            </div>
+            <div class="form-group" id="username">
+                <label>客户选择</label>
+                <select name="name">
+                    <%for(var i=0;i<username.length;i++){%>
+                        <option value ="<%=username[i]%>"><%=username[i]%></option>
+                    <%}%>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>客户支付</label>
+                <input type="text" class="form-control" name="clientmoney" >
+            </div>
+            <button type="btn" class="btn btn-default" id="rentcar">确认租出</button>
+            <button type="btn" class="btn btn-default">退出</button>
+        </div>
+    </div>
+
+
+</div>
+
+
+<script src="js/jquery-1.12.3.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+
+
+
+<script>
+    //点击类出来所对应的汽车
+    $(document).on("click","#tbody tr th",function(){
+        // console.log($(this).html());
+        var cont=$(this).html();
+
+        $("#tbody tr th").removeClass("active");
+        $(this).addClass("active");
+        $.ajax({
+            "url":"/classcar/"+cont,
+            "type":"post",
+            "success":function(data){
+
+                var data=data.result;
+                $("#classcar").empty()
+               for(var i=0;i<data.length;i++){
+                    var rent="";
+                    if(data[i].state==false){
+                        rent="未租出"
+                    }else if(data[i].state==true){
+                        rent="已租出"
+                    }
+                    var n=i+1;
+                   var str="<tr><th><input type='radio' name='check' class='gou' data-id='"+data[i]._id+"'></th><th>"+n+"</th><th>"+data[i].carname+"</th><th>"+data[i].money+"</th><th>"+rent+"</th></tr>"
+                   $("#classcar").append(str);
+               }
+
+
+
+
+            }
+        })
+    })
+
+    //点击勾选的时候
+    $(document).on("click",".gou",function(){
+        var id=$("input[name=check]:checked").data("id");
+        // console.log(id);
+        $.ajax({
+            "url":"/gouxuan/"+id,
+            "type":"post",
+            "success":function(data){
+                // console.log(data.result[0].state);
+                if(data.result[0].state==true){
+                    // alert("此车已租出");
+                    $("#rentcar").attr("disabled","disabled")
+                }else if(data.result[0].state==false){
+                    $("#rentAll input[name=daymoney]").val(data.result[0].money);
+                    $('#rentcar').removeAttr("disabled");
+                }
+
+            }
+        })
+
+
+    })
+
+    $("#rentAll input[name=usertime]").blur(function(){
+        $("#rentAll input[name=allmoney]").val(parseInt($("#rentAll input[name=usertime]").val())*parseInt($("#rentAll input[name=daymoney]").val()));
+
+    })
+
+    //确认租出
+    $("#rentcar").click(function(){
+        var id=$("input[name=check]:checked").data("id");
+        var paid=$("input[name=daymoney]").val()*$("input[name=usertime]").val()
+        $.post("/queren/"+id,{"username":$("#username option:selected").val(),"daymoney":$("input[name=daymoney]").val(),"usertime":$("input[name=usertime]").val(),"paid":paid,"allmoney":$("input[name=clientmoney]").val()},function(data){
+            if(data.result==1){
+                window.location="/car";
+            }
+        })
+    })
+
+
+
+</script>
+</body>
+</html>
+
+
